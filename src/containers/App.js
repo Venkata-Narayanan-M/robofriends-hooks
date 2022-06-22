@@ -1,41 +1,50 @@
-import React, { useState, useEffect } from 'react';
-import CardList from '../components/CardList';
-import SearchBox from '../components/SearchBox';
-import Scroll from '../components/Scroll';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+
+import { requestRobots } from "../actions";
+
+import CardList from "../components/CardList";
+import SearchBox from "../components/SearchBox";
+import Scroll from "../components/Scroll";
+import Header from "../components/Header";
+
+import "./App.css";
+import SomeButton from "../components/SomeButton";
 
 function App() {
-  const [robots, setRobots] = useState([])
-  const [searchfield, setSearchfield] = useState('')
-  const [count, setCount] = useState(0) // for demo purposes
+  const searchField = useSelector((state) => state.searchRobots.searchField);
+  const [count, setCount] = useState(0);
 
-  useEffect(()=> {
-    fetch('https://jsonplaceholder.typicode.com/users')
-      .then(response=> response.json())
-      .then(users => {setRobots(users)});
-    // console.log(count)
-  },[]) // if you add count, only run if count changes.
+  const handleClick = () => {
+    setCount((count) => count + 1);
+  };
 
-  const onSearchChange = (event) => {
-    setSearchfield(event.target.value)
-  }
+  const { robots, isPending, error } = useSelector(
+    (state) => state.requestRobots
+  );
 
-  const filteredRobots = robots.filter(robot =>{
-    return robot.name.toLowerCase().includes(searchfield.toLowerCase());
-  })
+  const dispatch = useDispatch();
 
-  return !robots.length ?
-    <h1>Loading</h1> :
-    (
-      <div className='tc'>
-        <h1 className='f1'>RoboFriends</h1>
-        <button onClick={()=>setCount(count+1)}>Click Me!</button>
-        <SearchBox searchChange={onSearchChange}/>
-        <Scroll>
-          <CardList robots={filteredRobots} />
-        </Scroll>
-      </div>
-    );
+  useEffect(() => {
+    dispatch(requestRobots());
+  }, []);
+
+  const filteredRobots = robots.filter((robot) => {
+    return robot.name.toLowerCase().includes(searchField.toLowerCase());
+  });
+
+  return isPending ? (
+    <h1>Loading {error}</h1>
+  ) : (
+    <div className="tc">
+      <Header />
+      <SomeButton color={"red"} handleClick={handleClick} count={count} />
+      <SearchBox />
+      <Scroll>
+        <CardList robots={filteredRobots} />
+      </Scroll>
+    </div>
+  );
 }
 
 export default App;
